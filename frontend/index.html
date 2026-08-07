@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BountyPulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 bg-white p-4 rounded shadow">
+
+      <h2 class="text-center mb-1">BountyPulse</h2>
+      <p id="accountAddress" class="text-center text-muted small mb-4">Connecting...</p>
+
+      <!-- Role-based dashboards. app.js shows/hides based on registry lookup -->
+
+      <!-- Not registered yet -->
+      <div id="registerArea" style="display:none;" class="mb-4">
+        <h5>Register</h5>
+        <input id="regName" class="form-control mb-2" placeholder="Your name">
+        <select id="regRole" class="form-select mb-2">
+          <option value="1">Client</option>
+          <option value="2">Freelancer</option>
+        </select>
+        <input type="file" id="regAvatar" class="form-control mb-2">
+        <button id="registerBtn" class="btn btn-dark w-100">Register</button>
+      </div>
+
+      <!-- Client dashboard -->
+      <div id="clientArea" style="display:none;">
+        <h5>Post a Bounty</h5>
+        <input id="bountyBudget" type="number" class="form-control mb-2" placeholder="Max budget (ETH)">
+        <textarea id="bountyDesc" class="form-control mb-2" placeholder="Bounty description"></textarea>
+        <button id="postBountyBtn" class="btn btn-primary w-100 mb-4">Post Bounty</button>
+      </div>
+
+      <!-- Freelancer dashboard -->
+      <div id="freelancerArea" style="display:none;">
+        <h5>Submit a Bid</h5>
+        <select id="bidBountySelect" class="form-select mb-2"></select>
+        <input id="bidAmount" type="number" class="form-control mb-2" placeholder="Your asking price (ETH)">
+        <button id="submitBidBtn" class="btn btn-primary w-100 mb-4">Submit Bid</button>
+      </div>
+
+      <!-- Shared: bounty feed -->
+      <div id="feedArea">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="mb-0">Open Bounties</h5>
+          <select id="sortSelect" class="form-select form-select-sm w-auto">
+            <option value="budget-desc">Highest Budget</option>
+            <option value="budget-asc">Lowest Budget</option>
+          </select>
+        </div>
+        <table class="table table-hover">
+          <thead><tr><th>Description</th><th>Max Budget</th><th>Status</th></tr></thead>
+          <tbody id="bountyTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Unclaimed earnings (Freelancer / Arbiter) -->
+      <div id="earningsArea" style="display:none;" class="mt-4 p-3 border rounded bg-light">
+        <h5>Unclaimed Earnings</h5>
+        <p id="unclaimedAmount" class="fs-4">0 ETH</p>
+        <button id="claimFundsBtn" class="btn btn-success w-100">Claim Funds</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<script src="ipfsHelper.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
