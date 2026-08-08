@@ -4,8 +4,17 @@ pragma solidity ^0.8.20;
 contract BountyPulse {
     // Enum and structs
 
-    enum Role { None, Client, Freelancer }
-    enum BountyStatus { Open, Locked, Resolved, Disputed }
+    enum Role {
+        None,
+        Client,
+        Freelancer
+    }
+    enum BountyStatus {
+        Open,
+        Locked,
+        Resolved,
+        Disputed
+    }
 
     struct User {
         string name;
@@ -32,7 +41,6 @@ contract BountyPulse {
     }
 
     // State Variables
-   
 
     address public immutable arbiter;
     uint256 public bountyCount;
@@ -47,9 +55,8 @@ contract BountyPulse {
     mapping(uint256 => mapping(address => bool)) public hasBidded;
     mapping(address => uint256) public withdrawableBalance;
 
-    
     // Custom Errors
-    
+
     error AlreadyRegistered();
     error UserNotRegistered();
     error InvalidRole();
@@ -73,25 +80,14 @@ contract BountyPulse {
     // Events
 
     event UserRegistered(
-        address indexed userAddress,
-        string name,
-        Role role,
-        string ipfsAvatarHash,
-        uint256 reputationScore
+        address indexed userAddress, string name, Role role, string ipfsAvatarHash, uint256 reputationScore
     );
 
     event BountyPosted(
-        uint256 indexed bountyId,
-        address indexed client,
-        uint256 maxBudget,
-        string ipfsBountyDetailsHash
+        uint256 indexed bountyId, address indexed client, uint256 maxBudget, string ipfsBountyDetailsHash
     );
 
-    event BidSubmitted(
-        uint256 indexed bountyId,
-        address indexed freelancer,
-        uint256 askingPrice
-    );
+    event BidSubmitted(uint256 indexed bountyId, address indexed freelancer, uint256 askingPrice);
 
     event EscrowFunded(
         uint256 indexed bountyId,
@@ -101,11 +97,7 @@ contract BountyPulse {
         uint256 refundedExcess
     );
 
-    event WorkSubmitted(
-        uint256 indexed bountyId,
-        address indexed freelancer,
-        string ipfsWorkFileHash
-    );
+    event WorkSubmitted(uint256 indexed bountyId, address indexed freelancer, string ipfsWorkFileHash);
 
     event WorkApproved(
         uint256 indexed bountyId,
@@ -115,15 +107,9 @@ contract BountyPulse {
         uint256 arbiterFee
     );
 
-    event FundsClaimed(
-        address indexed user,
-        uint256 amount
-    );
+    event FundsClaimed(address indexed user, uint256 amount);
 
-    event DisputeRaised(
-        uint256 indexed bountyId,
-        address indexed raisedBy
-    );
+    event DisputeRaised(uint256 indexed bountyId, address indexed raisedBy);
 
     event DisputeResolved(
         uint256 indexed bountyId,
@@ -134,7 +120,6 @@ contract BountyPulse {
     );
 
     // Modifiers
-    
 
     modifier onlyArbiter() {
         if (msg.sender != arbiter) revert OnlyArbiterAllowed();
@@ -188,10 +173,9 @@ contract BountyPulse {
         return newBountyId;
     }
 
-
     function submitBid(uint256 _bountyId, uint256 _askingPrice) external {
         if (users[msg.sender].role != Role.Freelancer) revert OnlyFreelancerAllowed();
-        
+
         Bounty storage bounty = bounties[_bountyId];
         if (bounty.id == 0 || bounty.status != BountyStatus.Open) revert BountyNotOpen();
         if (users[msg.sender].reputationScore < 40) {
@@ -203,15 +187,11 @@ contract BountyPulse {
 
         if (hasBidded[_bountyId][msg.sender]) revert AlreadyBidded();
 
-        bountyBids[_bountyId].push(Bid({
-            freelancer: msg.sender,
-            askingPrice: _askingPrice
-        }));
+        bountyBids[_bountyId].push(Bid({freelancer: msg.sender, askingPrice: _askingPrice}));
         hasBidded[_bountyId][msg.sender] = true;
 
         emit BidSubmitted(_bountyId, msg.sender, _askingPrice);
     }
-
 
     function fundEscrow(uint256 _bountyId, address _freelancer) external payable {
         Bounty storage bounty = bounties[_bountyId];
@@ -241,13 +221,12 @@ contract BountyPulse {
         bounty.status = BountyStatus.Locked;
 
         if (excess > 0) {
-            (bool refundSuccess, ) = payable(msg.sender).call{value: excess}("");
+            (bool refundSuccess,) = payable(msg.sender).call{value: excess}("");
             if (!refundSuccess) revert TransferFailed();
         }
 
         emit EscrowFunded(_bountyId, msg.sender, _freelancer, askingPrice, excess);
     }
-
 
     function submitWork(uint256 _bountyId, string calldata _ipfsWorkFileHash) external {
         Bounty storage bounty = bounties[_bountyId];
@@ -258,7 +237,6 @@ contract BountyPulse {
 
         emit WorkSubmitted(_bountyId, msg.sender, _ipfsWorkFileHash);
     }
-
 
     function approveWork(uint256 _bountyId) external {
         Bounty storage bounty = bounties[_bountyId];
@@ -278,7 +256,6 @@ contract BountyPulse {
         emit WorkApproved(_bountyId, msg.sender, bounty.chosenFreelancer, freelancerShare, fee);
     }
 
-
     function raiseDispute(uint256 _bountyId) external {
         Bounty storage bounty = bounties[_bountyId];
         if (bounty.id == 0 || bounty.status != BountyStatus.Locked) revert BountyNotLocked();
@@ -288,7 +265,6 @@ contract BountyPulse {
 
         emit DisputeRaised(_bountyId, msg.sender);
     }
-
 
     function resolveDispute(uint256 _bountyId, bool _freelancerFault) external onlyArbiter {
         Bounty storage bounty = bounties[_bountyId];
@@ -321,14 +297,13 @@ contract BountyPulse {
         emit DisputeResolved(_bountyId, _freelancerFault, refundedClientAmount, freelancerPayout, fee);
     }
 
-
     function claimFunds() external {
         uint256 amount = withdrawableBalance[msg.sender];
         if (amount == 0) revert NoBalanceToClaim();
 
         withdrawableBalance[msg.sender] = 0;
 
-        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        (bool success,) = payable(msg.sender).call{value: amount}("");
         if (!success) revert TransferFailed();
 
         emit FundsClaimed(msg.sender, amount);

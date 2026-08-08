@@ -153,7 +153,7 @@ contract BountyPulseTest is Test {
         // Balance check: client spent exactly 0.8 ether (1.0 sent - 0.2 refunded)
         assertEq(client1.balance, initialClientBalance - 0.8 ether);
 
-        (, , , , BountyPulse.BountyStatus status, address chosen, uint256 escrow, ) = contractInstance.bounties(1);
+        (,,,, BountyPulse.BountyStatus status, address chosen, uint256 escrow,) = contractInstance.bounties(1);
         assertTrue(status == BountyPulse.BountyStatus.Locked);
         assertEq(chosen, freelancer1);
         assertEq(escrow, 0.8 ether);
