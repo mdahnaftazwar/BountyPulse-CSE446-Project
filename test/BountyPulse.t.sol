@@ -209,11 +209,15 @@ contract BountyPulseTest is Test {
         vm.prank(client1);
         contractInstance.raiseDispute(1);
 
+        uint256 clientBalanceBeforeResolution = client1.balance;
+
         // Arbiter resolves dispute with Freelancer Fault = true
         contractInstance.resolveDispute(1, true);
 
-        // 100% refunded to Client withdrawable balance
-        assertEq(contractInstance.withdrawableBalance(client1), 1 ether);
+        // 100% refunded DIRECTLY to the client's wallet — no separate
+        // claimFunds() step required for this outcome.
+        assertEq(client1.balance, clientBalanceBeforeResolution + 1 ether);
+        assertEq(contractInstance.withdrawableBalance(client1), 0);
 
         // Reputation penalty: 100 - 30 = 70
         BountyPulse.User memory f1 = contractInstance.getUser(freelancer1);

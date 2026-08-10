@@ -3,7 +3,7 @@
 // Nothing here touches the contract; it only produces CIDs for other files to use.
 
 // TODO: paste your own Pinata JWT (pinata.cloud -> API Keys -> create key with pinning scopes)
-const PINATA_JWT = "PASTE_JWT_HERE";
+const PINATA_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJlYjYxMjllOC1jY2RlLTRjODUtOWI3Mi1mOTA1ZGM2NGI5MDYiLCJlbWFpbCI6Im1haGluLmtob25kb2tlckBnLmJyYWN1LmFjLmJkIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6Ijk1MDhkZTI1MmFhNmM1NDM5M2ZmIiwic2NvcGVkS2V5U2VjcmV0IjoiOGFhODIyNzY0ZDg5NDBlNTFiMTg0N2M3N2YzNDYwZTNjNWZkN2NjNTI5NTFmOTg3NjEyYWFmZDJiMDY0NDI0MCIsImV4cCI6MTgxNzcyMTE1MH0.EkAavn0VwLtA7cDD7bWHeF-cu3_cX9bcJES9g7r4JYk";
 
 async function uploadFileToIPFS(file) {
     const formData = new FormData();

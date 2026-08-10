@@ -16,6 +16,12 @@ async function registerUser() {
         const tx = await contract.registerUser(name, role, cid);
         await tx.wait();
         alert("Registered successfully!");
+
+        document.getElementById("regName").value = "";
+        document.getElementById("regAvatar").value = "";
+        const avatarPreview = document.getElementById("regAvatarPreview");
+        if (avatarPreview) avatarPreview.innerHTML = "";
+
         await renderDashboard();
     } catch (err) {
         console.error("registerUser failed:", err);
@@ -36,6 +42,10 @@ async function postBounty() {
         const tx = await contract.postBounty(budgetWei, cid);
         await tx.wait();
         alert("Bounty posted!");
+
+        document.getElementById("bountyBudget").value = "";
+        document.getElementById("bountyDesc").value = "";
+
         await loadFeed();
         await populateBountySelects();
     } catch (err) {
@@ -55,6 +65,7 @@ async function submitBid() {
         const tx = await contract.submitBid(bountyId, priceWei);
         await tx.wait();
         alert("Bid submitted!");
+        document.getElementById("bidAmount").value = "";
     } catch (err) {
         console.error("submitBid failed:", err);
         alert(decodeError(err));
@@ -72,6 +83,14 @@ async function submitWork() {
         const tx = await contract.submitWork(bountyId, cid);
         await tx.wait();
         alert("Work submitted!");
+
+        // Clear the local pre-upload preview and reset the file input —
+        // the selected file has now actually been submitted, so showing
+        // it as "not yet uploaded" afterward would be misleading.
+        const localPreview = document.getElementById("workFileLocalPreview");
+        if (localPreview) localPreview.innerHTML = "";
+        document.getElementById("workFile").value = "";
+
         await loadFeed();
     } catch (err) {
         console.error("submitWork failed:", err);
@@ -87,6 +106,13 @@ async function approveWork() {
         const tx = await contract.approveWork(bountyId);
         await tx.wait();
         alert("Work approved! Freelancer payout added to their withdrawable balance.");
+
+        // Clear the Checkpoint 3 work-file preview — once approved, the
+        // bounty leaves "awaiting approval" state, so a stale preview of
+        // a now-resolved bounty shouldn't linger on screen.
+        const workPreview = document.getElementById("workPreview");
+        if (workPreview) workPreview.innerHTML = "";
+
         await loadFeed();
     } catch (err) {
         console.error("approveWork failed:", err);
@@ -150,19 +176,45 @@ async function loadFreelancersForBounty(bountyId) {
         opt.textContent = `${bid.freelancer.slice(0, 6)}...${bid.freelancer.slice(-4)} — ${ethers.formatEther(bid.askingPrice)} ETH${repLabel}`;
         select.appendChild(opt);
     }
+
+    // Setting innerHTML doesn't fire a "change" event (same issue we hit
+    // with this exact dropdown before), so pre-fill the amount field
+    // directly here rather than waiting for one that may never come.
+    prefillFundAmount();
+}
+
+// Pre-fills #fundAmount to match the currently selected bid, as a sensible
+// default — but the field stays fully editable, so the Client can send
+// less (triggers InsufficientPayment revert) or more (triggers the
+// excess-refund path) to genuinely exercise both contract behaviors.
+function prefillFundAmount() {
+    const freelancerSelect = document.getElementById("fundFreelancerSelect");
+    const amountInput = document.getElementById("fundAmount");
+    if (!freelancerSelect || !amountInput) return;
+
+    const selectedOption = freelancerSelect.selectedOptions[0];
+    amountInput.value = selectedOption && selectedOption.dataset.price
+        ? ethers.formatEther(selectedOption.dataset.price)
+        : "";
 }
 
 async function submitFundEscrow() {
     const bountyId = document.getElementById("fundBountySelect").value;
     const freelancerSelect = document.getElementById("fundFreelancerSelect");
     const freelancerAddress = freelancerSelect.value;
-    const selectedOption = freelancerSelect.selectedOptions[0];
+    const amountInput = document.getElementById("fundAmount");
+    const amountEth = amountInput ? amountInput.value : "";
 
-    if (!bountyId || !freelancerAddress || !selectedOption) {
+    if (!bountyId || !freelancerAddress) {
         return alert("Select a bounty and a freelancer bid to fund.");
     }
+    if (!amountEth || Number(amountEth) <= 0) {
+        return alert("Enter an amount to send.");
+    }
 
-    const bidAmountWei = BigInt(selectedOption.dataset.price);
-    await fundEscrow(bountyId, freelancerAddress, bidAmountWei); // defined in contractService.js
+    const amountWei = ethers.parseEther(amountEth);
+    await fundEscrow(bountyId, freelancerAddress, amountWei); // defined in contractService.js
+
+    if (amountInput) amountInput.value = "";
     await populateBountySelects();
 }
