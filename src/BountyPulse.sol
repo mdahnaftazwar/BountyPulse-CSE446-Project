@@ -273,10 +273,11 @@ contract BountyPulse {
         uint256 refundedClientAmount = 0;
         uint256 freelancerPayout = 0;
         uint256 fee = 0;
+        address clientToRefund;
 
         if (_freelancerFault) {
             refundedClientAmount = bounty.escrowAmount;
-            withdrawableBalance[bounty.client] += refundedClientAmount;
+            clientToRefund = bounty.client;
 
             uint256 currentRep = users[bounty.chosenFreelancer].reputationScore;
             if (currentRep >= 30) {
@@ -295,6 +296,15 @@ contract BountyPulse {
         bounty.status = BountyStatus.Resolved;
 
         emit DisputeResolved(_bountyId, _freelancerFault, refundedClientAmount, freelancerPayout, fee);
+
+        // Client refund is sent directly to their wallet rather than through
+        // the withdrawableBalance pull-payment pattern, so they don't need
+        // to take a separate claim action. All state above is finalized
+        // before this external call (checks-effects-interactions).
+        if (_freelancerFault && refundedClientAmount > 0) {
+            (bool success,) = payable(clientToRefund).call{value: refundedClientAmount}("");
+            if (!success) revert TransferFailed();
+        }
     }
 
     function claimFunds() external {

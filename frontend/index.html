@@ -24,15 +24,21 @@
     <!-- ============ Sidebar: identity + earnings ============ -->
     <aside>
       <div class="identity">
-        <img id="myAvatar" class="avatar-thumb-lg" style="display:none;" alt="Your avatar">
+        <div class="identity-header">
+          <img id="myAvatar" class="avatar-thumb-lg" style="display:none;" alt="Your avatar">
+          <div id="myAvatarPlaceholder" class="avatar-placeholder" style="display:none;">?</div>
+          <p id="myName" class="identity-name">—</p>
+          <p id="myRoleLabel" class="identity-role"></p>
+        </div>
+
         <div id="reputationBlock" style="display:none;">
           <p class="eyebrow">Reputation</p>
           <p id="reputationFigure" class="earnings-figure" style="font-size:22px;">100</p>
         </div>
-        <p class="eyebrow">Unclaimed Earnings</p>
-        <p id="unclaimedAmount" class="earnings-figure">0.00 ETH</p>
 
         <div id="earningsArea" style="display:none;">
+          <p class="eyebrow">Unclaimed Earnings</p>
+          <p id="unclaimedAmount" class="earnings-figure">0.00 ETH</p>
           <button id="claimFundsBtn" class="btn btn-primary">Claim Funds</button>
         </div>
       </div>
@@ -73,6 +79,8 @@
         <select id="fundBountySelect" class="field"></select>
         <label class="field-label" for="fundFreelancerSelect">Winning bid — pays this freelancer's asking price</label>
         <select id="fundFreelancerSelect" class="field"></select>
+        <label class="field-label" for="fundAmount">Amount to send (ETH) — pre-filled to the bid; sending less reverts, sending more refunds the excess</label>
+        <input id="fundAmount" type="number" step="0.0001" class="field" placeholder="0.0">
         <button id="fundEscrowBtn" class="btn btn-seal">Fund Escrow (pays chosen bid)</button>
 
         <h4>Approve Submitted Work</h4>

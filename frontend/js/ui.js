@@ -22,7 +22,11 @@ async function renderDashboard() {
         show("freelancerArea", myRole === 2);
         show("disputeArea", myRole === 1 || myRole === 2);
         show("arbiterArea", isArbiter);
-        show("earningsArea", myRole === 1 || myRole === 2 || isArbiter);
+        // Earnings panel is only for roles that actually claim through
+        // withdrawableBalance: Freelancer and Arbiter. Clients no longer
+        // show this at all — their dispute refund is intended to go
+        // directly to their wallet (see contract-side change).
+        show("earningsArea", myRole === 2 || isArbiter);
 
         const roleTag = document.getElementById("roleTag");
         if (roleTag) {
@@ -36,16 +40,33 @@ async function renderDashboard() {
                 : "Not registered yet";
         }
 
-        if (myRole === 1 || myRole === 2 || isArbiter) {
+        // Identity header: name, role label, and avatar (with an initials
+        // placeholder when there's no avatar — most notably the Arbiter,
+        // who never registers and so never uploads one).
+        const displayName = isArbiter ? "Arbiter" : (user.isRegistered ? user.name : "Not registered");
+        const nameEl = document.getElementById("myName");
+        if (nameEl) nameEl.textContent = displayName;
+
+        const roleLabelEl = document.getElementById("myRoleLabel");
+        if (roleLabelEl) {
+            roleLabelEl.textContent = isArbiter
+                ? "Platform Arbiter"
+                : myRole === 1
+                ? "Client"
+                : myRole === 2
+                ? "Freelancer"
+                : "Unregistered";
+        }
+
+        if (typeof renderMyAvatar === "function") {
+            const avatarHash = !isArbiter && user.isRegistered ? user.avatarHash : null;
+            await renderMyAvatar(avatarHash, displayName);
+        }
+
+        if (myRole === 2 || isArbiter) {
             const balance = await getWithdrawableBalance(account);
             const el = document.getElementById("unclaimedAmount");
             if (el) el.textContent = balance + " ETH";
-        }
-
-        // Checkpoint 3: render this user's own avatar via the IPFS gateway
-        // (renderMyAvatar lives in ipfsRender.js, loaded after this file).
-        if (!isArbiter && user.isRegistered && typeof renderMyAvatar === "function") {
-            await renderMyAvatar(user.avatarHash);
         }
 
         // Reputation is only meaningful for Freelancers — Clients are

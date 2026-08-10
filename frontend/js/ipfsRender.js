@@ -60,15 +60,24 @@ async function renderBounties(bounties) {
 }
 
 // Renders the currently connected user's own avatar in the identity sidebar.
-async function renderMyAvatar(avatarHash) {
+// Falls back to an initials placeholder (rather than just hiding the image
+// and leaving an empty gap) when no avatar hash exists yet — most notably
+// for the Arbiter, who never registers or uploads one.
+async function renderMyAvatar(avatarHash, displayName) {
     const img = document.getElementById("myAvatar");
-    if (!img) return;
-    if (!avatarHash) {
+    const placeholder = document.getElementById("myAvatarPlaceholder");
+    if (!img || !placeholder) return;
+
+    if (avatarHash) {
+        img.src = cidToGatewayUrl(avatarHash);
+        img.style.display = "block";
+        placeholder.style.display = "none";
+    } else {
         img.style.display = "none";
-        return;
+        placeholder.style.display = "flex";
+        const initial = (displayName || "?").trim().charAt(0).toUpperCase() || "?";
+        placeholder.textContent = initial;
     }
-    img.src = cidToGatewayUrl(avatarHash);
-    img.style.display = "block";
 }
 
 // Renders a preview of the submitted work file (image or link) for whichever
@@ -101,4 +110,35 @@ function escapeHtml(str) {
     const div = document.createElement("div");
     div.textContent = str;
     return div.innerHTML;
+}
+
+// Local (pre-upload) file preview — lets the Freelancer/Client confirm
+// they picked the right file BEFORE it gets pinned to IPFS and sent
+// on-chain, since neither of those steps can be undone. Uses a local
+// blob URL, so this is instant and needs no network call.
+function wireLocalFilePreview(inputId, previewId) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    if (!input || !preview) return;
+
+    let lastBlobUrl = null;
+
+    input.addEventListener("change", () => {
+        if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl); // avoid leaking memory across repeated selections
+        preview.innerHTML = "";
+
+        const file = input.files[0];
+        if (!file) return;
+
+        lastBlobUrl = URL.createObjectURL(file);
+
+        if (file.type.startsWith("image/")) {
+            preview.innerHTML = `
+                <img src="${lastBlobUrl}" alt="Preview of ${escapeHtml(file.name)}" class="work-preview-img">
+                <p class="field-label" style="margin-top:4px;">${escapeHtml(file.name)} — not yet uploaded</p>`;
+        } else {
+            preview.innerHTML = `
+                <p class="field-label">Selected: ${escapeHtml(file.name)} — not yet uploaded</p>`;
+        }
+    });
 }

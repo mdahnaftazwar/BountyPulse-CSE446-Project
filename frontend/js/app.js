@@ -63,6 +63,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
+    // Re-prefill the amount field whenever the Client picks a different
+    // freelancer's bid in the "Fund Escrow" dropdown.
+    const fundFreelancerSelect = document.getElementById("fundFreelancerSelect");
+    if (fundFreelancerSelect) {
+        fundFreelancerSelect.addEventListener("change", () => {
+            prefillFundAmount();
+        });
+    }
+
     // Approve-work bounty select -> preview the submitted work file from
     // IPFS (Checkpoint 3 rendering requirement — see ipfsRender.js).
     const approveBountySelect = document.getElementById("approveBountySelect");
@@ -81,6 +90,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     bindClick("raiseDisputeBtn", raiseDispute);
     bindClick("resolveDisputeBtn", resolveDispute);
     bindClick("claimFundsBtn", claimFunds); // already defined in contractService.js
+
+    // Local (pre-upload) previews so a wrong file selection is caught
+    // before it's pinned to IPFS — see ipfsRender.js.
+    wireLocalFilePreview("regAvatar", "regAvatarPreview");
+    wireLocalFilePreview("workFile", "workFileLocalPreview");
 });
 
 function bindClick(elementId, handler) {
